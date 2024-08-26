@@ -4,18 +4,16 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
-  
+
 env:
   GH_TOKEN: ${{ github.token }}
-  
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
       actions: write
     steps:
@@ -24,7 +22,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          LOCAL_VER=$(git -c 'versionsort.suffix=-' \
+          LOCAL_TAG=$(git -c 'versionsort.suffix=-' \
               ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/netvpc/nginx.git \
               | tail --lines=1 \
               | cut --delimiter='/' --fields=3)
@@ -32,10 +30,14 @@ jobs:
               ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/nginx/nginx.git \
               | tail --lines=1 \
               | cut --delimiter='/' --fields=3)
+
+          LOCAL_VER=$(echo $LOCAL_TAG | sed -E 's/^v?//')
           RELEASE_VER=$(echo $RELEASE_TAG | sed -E 's/^release-//; s/^v?//')
-          if [[ $RELEASE_VER != $LOCAL_VER ]]; then
-              echo "Local version: $LOCAL_VER"
-              echo "Latest upstream version: v${RELEASE_VER}"
+
+          echo "Local version: $LOCAL_VER"
+          echo "Latest upstream version: v${RELEASE_VER}"
+
+          if [[ "$RELEASE_VER" != "$LOCAL_VER" ]]; then
               echo "Updating to latest version..."
               git tag v${RELEASE_VER}
               git push origin v${RELEASE_VER}
