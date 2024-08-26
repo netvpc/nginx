@@ -1,0 +1,25 @@
+steps:
+  - name: Checkout Code
+    uses: actions/checkout@v4
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+  - run: |
+      LOCAL_VER=$(git -c 'versionsort.suffix=-' \
+          ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/netvpc/nginx.git \
+          | tail --lines=1 \
+          | cut --delimiter='/' --fields=3)
+      RELEASE_TAG=$(git -c 'versionsort.suffix=-' \
+          ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/nginx/nginx.git \
+          | tail --lines=1 \
+          | cut --delimiter='/' --fields=3)
+      RELEASE_VER=$(echo $RELEASE_TAG | sed -E 's/^release-//; s/^v?//')
+      if [[ $RELEASE_VER != $LOCAL_VER ]]; then
+          echo "Local version: $LOCAL_VER"
+          echo "Latest upstream version: v${RELEASE_VER}"
+          echo "Updating to latest version..."
+          git tag v${RELEASE_VER}
+          git push origin v${RELEASE_VER}
+          gh workflow run docker-publish.yml --ref v${RELEASE_VER}
+      else
+          echo "No updates available..."
+      fi
