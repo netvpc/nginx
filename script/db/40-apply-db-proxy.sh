@@ -21,8 +21,14 @@ add_stream_block() {
   read -r -d '' stream_block <<EOF
 stream {
   upstream db {
-    server ${DATABASE_SERVER}:${DATABASE_PORT};
+    server ${DATABASE_HOST}:${DATABASE_PORT};
   }
+
+  log_format  main  '$remote_addr [$time_local] '
+                    '$protocol $status $bytes_sent $bytes_received '
+                    '$session_time';
+
+  access_log  /var/log/nginx/access.log  main;
 
   server {
     listen ${DATABASE_PORT};
@@ -46,9 +52,9 @@ case "$PROXY_TYPE" in
     NGINX_CONF=${NGINX_CONF:-"/etc/nginx/nginx.conf"}
     echo -e "$COLOR_INFO PROXY_TYPE is set to '${PROXY_TYPE}'. Continuing with the script."
     
-    # Check DATABASE_SERVER and DATABASE_PORT environment variables
-    if [[ -z "$DATABASE_SERVER" || -z "$DATABASE_PORT" ]]; then
-        echo -e "$COLOR_INFO The 'DATABASE_SERVER' or 'DATABASE_PORT' environment variable isn't set."
+    # Check DATABASE_HOST and DATABASE_PORT environment variables
+    if [[ -z "$DATABASE_HOST" || -z "$DATABASE_PORT" ]]; then
+        echo -e "$COLOR_INFO The 'DATABASE_HOST' or 'DATABASE_PORT' environment variable isn't set."
         echo -e "$COLOR_WARN Cancelling the script and running the container with the default configuration."
         exit 0
     fi
