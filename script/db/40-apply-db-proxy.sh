@@ -24,8 +24,8 @@ stream {
     server ${DATABASE_HOST}:${DATABASE_PORT};
   }
 
-  log_format  main  '\$remote_addr [\$time_local] '
-                    '\$protocol \$status \$bytes_sent \$bytes_received '
+  log_format  main  '\$remote_addr [\$time_local]'
+                    '\$protocol \$status \$bytes_sent \$bytes_received'
                     '\$session_time';
 
   access_log  /var/log/nginx/access.log  main;
