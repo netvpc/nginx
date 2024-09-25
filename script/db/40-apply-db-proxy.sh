@@ -31,7 +31,7 @@ stream {
   access_log  /var/log/nginx/access.log  main;
 
   server {
-    listen ${DATABASE_PORT};
+    listen ${DATABASE_PORT} so_keepalive=on;
     proxy_pass db;
   }
 }
